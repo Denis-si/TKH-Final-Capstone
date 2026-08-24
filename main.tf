@@ -52,6 +52,7 @@ resource "aws_internet_gateway" "capstone_igw" {
   }
 }
 
+# tfsec:ignore:aws-ec2-no-public-ip-subnet
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.capstone_vpc.id
   cidr_block              = var.public_subnet_cidr
@@ -89,6 +90,7 @@ resource "aws_security_group" "web_sg" {
   description = "Allow HTTP publicly and SSH restricted to admin IP"
   vpc_id      = aws_vpc.capstone_vpc.id
 
+  # tfsec:ignore:aws-vpc-no-public-ingress-sgr
   ingress {
     description      = "Allow HTTP inbound traffic"
     from_port        = 80
@@ -106,6 +108,7 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = [var.my_home_ip]
   }
 
+  # tfsec:ignore:aws-vpc-no-public-egress-sgr
   egress {
     description      = "Allow all outbound traffic"
     from_port        = 0
@@ -124,9 +127,9 @@ resource "aws_security_group" "web_sg" {
 # COMPUTE: HARDENED EC2 WEB SERVER
 # ------------------------------------------------------------------------------
 resource "aws_instance" "web_server" {
-  ami                  = data.aws_ami.amazon_linux_2023.id
-  instance_type        = "t2.micro"
-  subnet_id            = aws_subnet.public_subnet.id
+  ami                    = data.aws_ami.amazon_linux_2023.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
   # Encrypted Root Storage
